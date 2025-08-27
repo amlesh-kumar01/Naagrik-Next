@@ -6,46 +6,49 @@ if (!MONGODB_URI) {
   throw new Error('Please define the DATABASE_URL environment variable inside .env.local')
 }
 
-interface MongooseCache {
-  conn: typeof mongoose | null
-  promise: Promise<typeof mongoose> | null
-}
+let isConnected = false
 
-// In development, use a global variable so that the value
-// is preserved across module reloads caused by HMR (Hot Module Replacement).
-const globalForMongoose = globalThis as unknown as {
-  mongoose: MongooseCache | undefined
-}
-
-const cached: MongooseCache = globalForMongoose.mongoose ?? { conn: null, promise: null }
-
-if (!globalForMongoose.mongoose) {
-  globalForMongoose.mongoose = cached
-}
-
-async function connectDB(): Promise<typeof mongoose> {
-  if (cached.conn) {
-    return cached.conn
+async function connectDB(): Promise<void> {
+  // Check if already connected
+  if (isConnected) {
+    return
   }
 
-  if (!cached.promise) {
+  // Check mongoose connection state
+  if (mongoose.connection.readyState >= 1) {
+    isConnected = true
+    return
+  }
+
+  try {
     const opts = {
       bufferCommands: false,
     }
 
-    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
-      return mongoose
+    await mongoose.connect(MONGODB_URI!, opts)
+    isConnected = true
+    
+    // Set up connection event listeners
+    mongoose.connection.on('connected', () => {
+      console.log('MongoDB connected successfully')
+      isConnected = true
     })
-  }
 
-  try {
-    cached.conn = await cached.promise
-  } catch (e) {
-    cached.promise = null
-    throw e
-  }
+    mongoose.connection.on('error', (err) => {
+      console.error('MongoDB connection error:', err)
+      isConnected = false
+    })
 
-  return cached.conn
+    mongoose.connection.on('disconnected', () => {
+      console.log('MongoDB disconnected')
+      isConnected = false
+    })
+
+  } catch (error) {
+    console.error('MongoDB connection failed:', error)
+    isConnected = false
+    throw error
+  }
 }
 
 export default connectDB
