@@ -3,16 +3,28 @@ import connectDB from '@/lib/db'
 import { Issue, User, IssueStatus } from '@/models'
 import { verifyToken } from '@/lib/auth'
 import { formatIssueResponse, PopulatedIssue } from '@/lib/mongo-utils'
+import { withCors, handleOptions } from '@/lib/cors'
 
 interface Params {
   id: string
 }
 
+export const OPTIONS = handleOptions
+
 // PUT /api/issues/[id]/status - Update issue status (admin only)
-export async function PUT(
+export const PUT = withCors(async (
   request: NextRequest,
-  { params }: { params: Params }
-) {
+  context?: { params: Params }
+) => {
+  if (!context?.params) {
+    return Response.json(
+      { message: 'Invalid request parameters' },
+      { status: 400 }
+    )
+  }
+  
+  const { params } = context
+  
   try {
     await connectDB()
     
@@ -61,13 +73,22 @@ export async function PUT(
       { status: 500 }
     )
   }
-}
+})
 
 // DELETE /api/issues/[id]/status - Delete issue (admin only)
-export async function DELETE(
+export const DELETE = withCors(async (
   request: NextRequest,
-  { params }: { params: Params }
-) {
+  context?: { params: Params }
+) => {
+  if (!context?.params) {
+    return Response.json(
+      { message: 'Invalid request parameters' },
+      { status: 400 }
+    )
+  }
+  
+  const { params } = context
+  
   try {
     await connectDB()
     
@@ -97,4 +118,4 @@ export async function DELETE(
       { status: 500 }
     )
   }
-}
+})

@@ -4,9 +4,13 @@ import { Issue, User, Comment } from '@/models'
 import { requireAuth } from '@/lib/auth'
 import { CreateIssueData } from '@/types'
 import { formatIssueResponse, formatCommentResponse, PopulatedIssue, PopulatedComment } from '@/lib/mongo-utils'
+import { withCors, handleOptions } from '@/lib/cors'
+
+// Handle preflight OPTIONS requests
+export const OPTIONS = handleOptions
 
 // GET /api/issues - Get all issues
-export async function GET() {
+export const GET = withCors(async () => {
   try {
     await connectDB()
     
@@ -46,10 +50,10 @@ export async function GET() {
       { status: 500 }
     )
   }
-}
+})
 
 // POST /api/issues - Create new issue (authenticated)
-export const POST = requireAuth(async (request: NextRequest, user) => {
+export const POST = withCors(requireAuth(async (request: NextRequest, user) => {
   try {
     await connectDB()
     
@@ -99,4 +103,4 @@ export const POST = requireAuth(async (request: NextRequest, user) => {
       { status: 500 }
     )
   }
-})
+}))

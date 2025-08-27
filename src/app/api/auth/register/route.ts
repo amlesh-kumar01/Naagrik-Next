@@ -3,8 +3,12 @@ import bcrypt from 'bcryptjs'
 import connectDB from '@/lib/db'
 import { User } from '@/models'
 import { CreateUserData } from '@/types'
+import { withCors, handleOptions } from '@/lib/cors'
 
-export async function POST(request: NextRequest) {
+// Handle preflight OPTIONS requests
+export const OPTIONS = handleOptions
+
+export const POST = withCors(async (request: NextRequest) => {
   try {
     await connectDB()
     
@@ -48,4 +52,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

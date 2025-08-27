@@ -1,7 +1,10 @@
 import { NextRequest } from 'next/server'
 import { uploadToCloudinary } from '@/lib/cloudinary'
+import { withCors, handleOptions } from '@/lib/cors'
 
-export async function POST(request: NextRequest) {
+export const OPTIONS = handleOptions
+
+export const POST = withCors(async (request: NextRequest) => {
   try {
     const formData = await request.formData()
     const file = formData.get('image') as File
@@ -44,4 +47,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

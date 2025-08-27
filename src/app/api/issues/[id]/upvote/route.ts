@@ -2,16 +2,28 @@ import { NextRequest } from 'next/server'
 import connectDB from '@/lib/db'
 import { Issue, User } from '@/models'
 import { formatIssueResponse, PopulatedIssue } from '@/lib/mongo-utils'
+import { withCors, handleOptions } from '@/lib/cors'
 
 interface Params {
   id: string
 }
 
+export const OPTIONS = handleOptions
+
 // POST /api/issues/[id]/upvote - Upvote an issue (public)
-export async function POST(
+export const POST = withCors(async (
   request: NextRequest,
-  { params }: { params: Params }
-) {
+  context?: { params: Params }
+) => {
+  if (!context?.params) {
+    return Response.json(
+      { message: 'Invalid request parameters' },
+      { status: 400 }
+    )
+  }
+  
+  const { params } = context
+  
   try {
     await connectDB()
     
@@ -42,4 +54,4 @@ export async function POST(
       { status: 500 }
     )
   }
-}
+})

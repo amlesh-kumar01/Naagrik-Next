@@ -1,8 +1,12 @@
 import { NextRequest } from 'next/server'
 import connectDB from '@/lib/db'
 import { User } from '@/models'
+import { withCors, handleOptions } from '@/lib/cors'
 
-export async function GET(request: NextRequest) {
+// Handle preflight OPTIONS requests
+export const OPTIONS = handleOptions
+
+export const GET = withCors(async (request: NextRequest) => {
   try {
     // Test database connection
     await connectDB()
@@ -28,4 +32,4 @@ export async function GET(request: NextRequest) {
       { status: 503 }
     )
   }
-}
+})

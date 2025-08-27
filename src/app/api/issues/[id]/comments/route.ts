@@ -3,15 +3,27 @@ import connectDB from '@/lib/db'
 import { Comment, User } from '@/models'
 import { verifyToken } from '@/lib/auth'
 import { formatCommentResponse, PopulatedComment } from '@/lib/mongo-utils'
+import { withCors, handleOptions } from '@/lib/cors'
 
 interface Params {
   id: string
 }
 
-export async function POST(
+export const OPTIONS = handleOptions
+
+export const POST = withCors(async (
   request: NextRequest,
-  { params }: { params: Params }
-) {
+  context?: { params: Params }
+) => {
+  if (!context?.params) {
+    return Response.json(
+      { message: 'Invalid request parameters' },
+      { status: 400 }
+    )
+  }
+  
+  const { params } = context
+  
   try {
     await connectDB()
     
@@ -63,4 +75,4 @@ export async function POST(
       { status: 500 }
     )
   }
-}
+})
